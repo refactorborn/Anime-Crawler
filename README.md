@@ -16,7 +16,7 @@ __If the source doesn't have what you want, please let me know.__
 ![image](https://github.com/gavin85-Zeng/animecrawler/blob/master/App_Recording.gif)
 
 ## Structure
-	["title": "あやかしトライアングル",
+	[{"title": "あやかしトライアングル",
     "imgURI": "https://eiga.k-img.com/images/anime/program/109944/photo/aa0fb533d678527e/320.jpg?1664187887",
     "productionCompany": "CONNECT",
     "staff": [

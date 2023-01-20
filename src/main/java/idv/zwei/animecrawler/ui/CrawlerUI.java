@@ -101,6 +101,7 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 		northPanel.add(seasonLabel, gbc_seasonLabel);
 
 		seasonComboBox = new JComboBox<String>();
+		seasonComboBox.setEnabled(false);
 		GridBagConstraints gbc_seasonComboBox = new GridBagConstraints();
 		gbc_seasonComboBox.insets = new Insets(0, 0, 5, 0);
 		gbc_seasonComboBox.fill = GridBagConstraints.HORIZONTAL;
@@ -214,7 +215,7 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 						appendMessage("Get season data failed! message: " + mutli.getMessage());
 						return;
 					}
-					
+					EventQueue.invokeLater(() -> seasonComboBox.setEnabled(false));
 					new Thread(() -> {
 						try {
 							appendMessage("Start scrape " + sourceText +" season data\n");
@@ -224,6 +225,7 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 						}						
 						EventQueue.invokeLater(() -> {
 							seasonComboBox.setModel(new DefaultComboBoxModel<String>(seasonData.getKeys()));
+							seasonComboBox.setEnabled(true);
 						});
 					}).start();
 				}
@@ -261,7 +263,7 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 					Scraper scraper = clazz.getDeclaredConstructor(new Class[]{UpdateListener.class, String.class, String.class}).newInstance(_this, uri, pathText);
 					
 					updateProgress(0);
-					lockAllButton();
+					lockButton();
 					new Thread(() -> {
 						scraper.start();
 						releaseButton();
@@ -315,7 +317,7 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 		return uri;
 	}
 	
-	public void lockAllButton() {
+	public void lockButton() {
 		setPathButton.setEnabled(false);
 		startButton.setEnabled(false);
 	}

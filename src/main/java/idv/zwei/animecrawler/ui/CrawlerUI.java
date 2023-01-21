@@ -189,10 +189,10 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 					}
 					EventQueue.invokeLater(() -> {
 						seasonComboBox.setModel(new DefaultComboBoxModel<String>());
+						seasonComboBox.setEnabled(false);
 					});
 					
 					String uri = sourceModel.getUri();
-					EventQueue.invokeLater(() -> seasonComboBox.setEnabled(false));
 					new Thread(() -> {
 						Scraper scraper = ScraperFactory.getScraper(sourceText, _this);
 						try {

@@ -198,10 +198,8 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 						try {
 							seasonData = scraper.getSeasons(uri);
 						} catch (Exception e1) {
-							e1.printStackTrace();
 							seasonData = null;
-						} finally {
-							releaseButton();
+							appendMessage("Get season data failed! message: " + e1.getMessage());
 						}
 						EventQueue.invokeLater(() -> {
 							String[] model = {} ;

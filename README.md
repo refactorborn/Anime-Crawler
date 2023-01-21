@@ -48,5 +48,9 @@ __If the source doesn't have what you want, please let me know.__
 	},{...}]
 
 ### Source From
-1. [アニメハック](https://anime.eiga.com/)
-2. [animatetimes](https://www.animatetimes.com/)
+* [アニメハック](https://anime.eiga.com/)
+* [animatetimes](https://www.animatetimes.com/)
+	
+**Speed Ranking**
+1. animatetimes
+2. アニメハック

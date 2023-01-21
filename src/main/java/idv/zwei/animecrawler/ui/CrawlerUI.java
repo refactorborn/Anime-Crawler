@@ -12,8 +12,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -27,8 +25,8 @@ import javax.swing.border.EmptyBorder;
 
 import idv.zwei.animecrawler.Scraper;
 import idv.zwei.animecrawler.Season;
-import idv.zwei.animecrawler.SeasonScraper;
 import idv.zwei.animecrawler.Source;
+import idv.zwei.animecrawler.factory.ScraperFactory;
 
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
@@ -48,9 +46,6 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 	private JButton setPathButton;
 	private JButton startButton;
 
-	/**
-	 * Create the frame.
-	 */
 	public CrawlerUI() {
 		CrawlerUI _this = this;
 		setTitle("Anime Crawler");
@@ -178,7 +173,6 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 				int returnVal = fc.showSaveDialog(_this);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					File choice = fc.getSelectedFile();
-					System.out.println(choice.getAbsolutePath());
 					setPathLabel.setText(choice.getAbsolutePath());
 				}
 			}
@@ -196,35 +190,25 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 					EventQueue.invokeLater(() -> {
 						seasonComboBox.setModel(new DefaultComboBoxModel<String>());
 					});
-					String classNamePrefix = getClassNamePrefix(sourceText);
-					String className = "idv.zwei.animecrawler." + classNamePrefix.toLowerCase() + "." + classNamePrefix + "SeasonScraper";
 					
 					String uri = sourceModel.getUri();
-					SeasonScraper scraper;
-					try {
-						@SuppressWarnings("unchecked")
-						Class<SeasonScraper> clazz = (Class<SeasonScraper>) Class.forName(className);
-						scraper = clazz.getDeclaredConstructor(new Class[]{String.class}).newInstance(uri);
-					} catch (InstantiationException 
-							| IllegalAccessException
-							| IllegalArgumentException
-							| InvocationTargetException 
-							| NoSuchMethodException
-							| SecurityException 
-							| ClassNotFoundException mutli) {
-						appendMessage("Get season data failed! message: " + mutli.getMessage());
-						return;
-					}
 					EventQueue.invokeLater(() -> seasonComboBox.setEnabled(false));
 					new Thread(() -> {
+						Scraper scraper = ScraperFactory.getScraper(sourceText, _this);
 						try {
-							appendMessage("Start scrape " + sourceText +" season data\n");
-							seasonData = scraper.getSeason();
-						} catch (IOException ioe) {
-							appendMessage("Get season data failed! exception: " +  ioe.getMessage());
-						}						
+							seasonData = scraper.getSeasons(uri);
+						} catch (Exception e1) {
+							e1.printStackTrace();
+							seasonData = null;
+						} finally {
+							releaseButton();
+						}
 						EventQueue.invokeLater(() -> {
-							seasonComboBox.setModel(new DefaultComboBoxModel<String>(seasonData.getKeys()));
+							String[] model = {} ;
+							if (seasonData != null) {
+								model = seasonData.getKeys();
+							}
+							seasonComboBox.setModel(new DefaultComboBoxModel<String>(model));
 							seasonComboBox.setEnabled(true);
 						});
 					}).start();
@@ -255,30 +239,20 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 				
 				String uri = getUri();
 				String sourceText = sourceModel.getSelectedItem();
-				String classNamePrefix = getClassNamePrefix(sourceText);
-				String className = "idv.zwei.animecrawler." + classNamePrefix.toLowerCase() + "." + classNamePrefix + "Scraper";
-				try {
-					@SuppressWarnings("unchecked")
-					Class<Scraper> clazz = (Class<Scraper>) Class.forName(className);
-					Scraper scraper = clazz.getDeclaredConstructor(new Class[]{UpdateListener.class, String.class, String.class}).newInstance(_this, uri, pathText);
-					
-					updateProgress(0);
-					lockButton();
-					new Thread(() -> {
-						scraper.start();
+				
+				updateProgress(0);
+				lockButton();
+				new Thread(() -> {
+					Scraper scraper = ScraperFactory.getScraper(sourceText, _this);
+					try {
+						scraper.getInformation(uri, pathText);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					} finally {
 						releaseButton();
-					}).start();
-					appendMessage("Start Scrape Animehakku " + seasonSelected + "...\n");
-				} catch (ClassNotFoundException | 
-						InstantiationException | 
-						IllegalAccessException | 
-						IllegalArgumentException | 
-						InvocationTargetException | 
-						NoSuchMethodException | 
-						SecurityException multi) {
-					releaseButton();
-					appendMessage("Reflection class failed! message: " + multi.getMessage());
-				}
+					}
+				}).start();
+				appendMessage("Start Scrape " + sourceText + " " + seasonSelected + "...");
 			}
 		});
 	}
@@ -291,18 +265,10 @@ public class CrawlerUI extends JFrame implements UpdateListener {
 
 	@Override
 	public void appendMessage(String message) {
-		SwingUtilities.invokeLater(() -> messageTextArea.append(message));
+		String messageWithLineSeparator = message + System.lineSeparator();
+		SwingUtilities.invokeLater(() -> messageTextArea.append(messageWithLineSeparator));
 	}
 
-	public String getClassNamePrefix(String selectedText) {
-		for(Source source : Source.values()) {
-			if (source.getTitle().equals(selectedText)) {		
-				return source.getClassNamePrefix();
-			}
-		}
-		return null;
-	}
-	
 	public String getUri() {
 		String seasonSelected = (String) seasonComboBox.getSelectedItem();
 		String subUri = seasonData.get(seasonSelected);

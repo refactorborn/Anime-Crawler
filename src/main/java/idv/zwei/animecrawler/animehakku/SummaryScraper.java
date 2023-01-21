@@ -28,7 +28,6 @@ public class SummaryScraper {
 			Document doc = Jsoup.connect(uri).timeout(30000).get();
 			Elements eles = doc.select(".animeSeasonContainer .animeSeasonBox");
 			var animes = new ArrayList<Information>();
-			System.out.println("HTML Head Title: " + doc.title());
 			
 			for (Element ele : eles) {
 				var info = new Information();
@@ -42,8 +41,6 @@ public class SummaryScraper {
 				
 				animes.add(info);
 			}
-			
-			System.out.println(animes.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
